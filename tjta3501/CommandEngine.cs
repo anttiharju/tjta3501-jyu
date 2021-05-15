@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace hoyry
+namespace tjta3501
 {
     /// <summary>
     /// Yksinkertainen komentorivisysteemi. Omassa tiedostossaan, jotta
@@ -11,16 +11,15 @@ namespace hoyry
     public class CommandEngine
     {
         public readonly Dictionary<string, Action<string[]>> commands;
+
         private StringBuilder tuloste;
+
 
         public CommandEngine()
         {
             commands = new Dictionary<string, Action<string[]>>();
-            AddCommand("apua", Help);
-            AddCommand("help", Help);
             AddCommand("poistu", Exit);
             AddCommand("exit", Exit);
-            Help();
         }
 
 
@@ -34,8 +33,11 @@ namespace hoyry
         {
             while (true)
             {
+                Console.Clear();
+                Help();
                 string[] input = Console.ReadLine().ToLower().Split(' ');
                 Console.Clear();
+
                 string command = input[0];
                 string[] args = new string[input.Length - 1];
                 for (int i = 0; i < args.Length; i++)
@@ -49,7 +51,6 @@ namespace hoyry
                 }
                 else
                 {
-                    Help(args);
                     ConsoleColor tmp = Console.ForegroundColor;
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"Komentoa \'{command}\' ei tunnistettu.\n");
@@ -65,13 +66,14 @@ namespace hoyry
         }
 
 
-        private void Help(string[] args = null)
+        private void Help()
         {
             Logo();
             tuloste = new StringBuilder("");
             tuloste.Append("KOMENTO          KUVAUS\n\n");
-            tuloste.Append("apua             Tämä näkymä\n");
-            tuloste.Append("poistu           Sulje sovellus\n");
+            tuloste.Append("kirjaudu [id]    Kirjaudu sisään.\n");
+            tuloste.Append("kokoelma         Listaa omistamasi pelit (vaatii kirjautumisen).\n");
+            tuloste.Append("poistu           Sulje sovellus.\n");
             Console.WriteLine(tuloste.ToString());
         }
 
