@@ -1,4 +1,6 @@
-# TJTA3501
+# Höyry
+TBD käyttöohjeet
+## Osio: Sovellusohjelman toteutus
 - Oppimistavoite: tietokannan ja tietokannanhallintajärjestelmän ymmärtäminen osana tietokantajärjestelmää.
     - Toteuta pienimuotoinen sovellusohjelma, joka käyttää tietokantaasi.
     - Ohjelman täytyy olla interaktiivinen (ei riitä että se hakee kannasta jotain ja näyttää sen).
