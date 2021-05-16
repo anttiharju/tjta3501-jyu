@@ -4,9 +4,7 @@
     {
         public static void Main()
         {
-            CommandEngine engine = new CommandEngine();
-            new Hoyry(engine);
-            engine.Run();
+            new Hoyry(new CommandEngine());
         }
     }
 }

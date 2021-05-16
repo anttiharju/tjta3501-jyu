@@ -34,8 +34,7 @@ namespace tjta3501
         {
             while (true)
             {
-                Console.Clear();
-                Help();
+                Home();
                 string[] input = Console.ReadLine().ToLower().Split(' ');
                 Console.Clear();
 
@@ -52,12 +51,30 @@ namespace tjta3501
                 }
                 else
                 {
-                    ConsoleColor tmp = Console.ForegroundColor;
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Komentoa \'{command}\' ei tunnistettu.\n");
-                    Console.ForegroundColor = tmp;
+                    if (command != "")
+                    {
+                        Error($"Komentoa \'{command}\' ei tunnistettu.");
+                        continue;
+                    }
                 }
+                Console.Clear();
             }
+        }
+
+
+        public void Continue()
+        {
+            Console.WriteLine("\nPaina mitä tahansa näppäintä jatkaaksesi.");
+            Console.ReadKey();
+        }
+
+
+        public void Error(string s)
+        {
+            ConsoleColor tmp = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(s);
+            Console.ForegroundColor = tmp;
         }
 
 
@@ -67,7 +84,7 @@ namespace tjta3501
         }
 
 
-        private void Help()
+        private void Home()
         {
             Logo();
             printout = new StringBuilder("");
