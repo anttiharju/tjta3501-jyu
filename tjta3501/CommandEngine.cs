@@ -12,14 +12,15 @@ namespace tjta3501
     {
         public readonly Dictionary<string, Action<string[]>> commands;
 
-        private StringBuilder tuloste;
+        private StringBuilder printout;
 
 
         public CommandEngine()
         {
             commands = new Dictionary<string, Action<string[]>>();
-            AddCommand("poistu", Exit);
+            AddCommand("sulje", Exit);
             AddCommand("exit", Exit);
+            AddCommand("q", Exit);
         }
 
 
@@ -69,27 +70,28 @@ namespace tjta3501
         private void Help()
         {
             Logo();
-            tuloste = new StringBuilder("");
-            tuloste.Append("KOMENTO          KUVAUS\n\n");
-            tuloste.Append("kirjaudu [id]    Kirjaudu sisään.\n");
-            tuloste.Append("kokoelma         Listaa omistamasi pelit (vaatii kirjautumisen).\n");
-            tuloste.Append("poistu           Sulje sovellus.\n");
-            Console.WriteLine(tuloste.ToString());
+            printout = new StringBuilder("");
+            printout.Append("KOMENTO          KUVAUS\n\n");
+            printout.Append("kirjaudu [id]    Kirjaudu sisään.\n");
+            printout.Append("poistu           Kirjaudu ulos.\n");
+            printout.Append("kokoelma         Listaa omistamasi pelit (vaatii kirjautumisen).\n");
+            printout.Append("sulje            Sulje sovellus.\n");
+            Console.WriteLine(printout.ToString());
         }
 
 
         private void Logo()
         {
-            tuloste = new StringBuilder("");
+            printout = new StringBuilder("");
             ConsoleColor tmp = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Blue;
-            tuloste.Append(" _   _                        \n");
-            tuloste.Append("| | | | *_*  _   _ _ __ _   _ \n");
-            tuloste.Append("| |_| |/ _ \\| | | | '__| | | |\n");
-            tuloste.Append("|  _  | (_) | |_| | |  | |_| |\n");
-            tuloste.Append("|_| |_|\\___/ \\__, |_|   \\__, |\n");
-            tuloste.Append("             |___/      |___/ \n");
-            Console.WriteLine(tuloste.ToString());
+            printout.Append(" _   _                        \n");
+            printout.Append("| | | | *_*  _   _ _ __ _   _ \n");
+            printout.Append("| |_| |/ _ \\| | | | '__| | | |\n");
+            printout.Append("|  _  | (_) | |_| | |  | |_| |\n");
+            printout.Append("|_| |_|\\___/ \\__, |_|   \\__, |\n");
+            printout.Append("             |___/      |___/ \n");
+            Console.WriteLine(printout.ToString());
             Console.ForegroundColor = tmp;
         }
     }
