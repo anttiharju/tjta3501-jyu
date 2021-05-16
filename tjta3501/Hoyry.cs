@@ -9,10 +9,10 @@ namespace tjta3501
         private readonly CommandEngine engine;
         private readonly string connectionString = "Host=192.168.1.23;Username=hoyry;Password=hl3;Database=tjta3501";
 
-        private int pelaajaid;
         private StringBuilder printout;
-        private int genreLength;
+        private int pelaajaid;
         private int nimiLength;
+        private int genreLength;
         private int kehittajaLength;
         private int julkaisijaLength;
 
@@ -20,11 +20,13 @@ namespace tjta3501
         public Hoyry(CommandEngine engine)
         {
             this.engine = engine;
-            engine.AddCommand("kirjaudu", Kirjaudu);
+            engine.AddCommand("kirjaudu", Kirjaudu);    // tietokantaoperaatio
             engine.AddCommand("ulos", KirjauduUlos);
-            engine.AddCommand("kokoelma", Kokoelma);
-            engine.AddCommand("hae", Hae);
-            engine.AddCommand("osta", Osta);
+            engine.AddCommand("kokoelma", Kokoelma);    // tietokantaoperaatio
+            engine.AddCommand("hae", Hae);              // tietokantaoperaatio
+            engine.AddCommand("osta", Osta);            // kirjoitusoperaatio
+            engine.AddCommand("arvostele", Arvostele);  // kirjoitusoperaatio
+            engine.AddCommand("arvostelut", Arvostelut);// tietokantaoperaatio, raakile koska ylimääräinen
             Calibrate();
             engine.Run();
         }
@@ -32,8 +34,8 @@ namespace tjta3501
 
         public void Osta(string[] args)
         {
-            if (VaadiKirjautuminen()) return;
-            if (VaadiArgumentteja(1, args)) return;
+            if (RequireLogin()) return;
+            if (RequireArgs(1, args)) return;
 
             if (int.TryParse(args[0], out int peliid))
             {
@@ -42,11 +44,15 @@ namespace tjta3501
                 try
                 {
                     new NpgsqlCommand(sql, connection).ExecuteScalar()?.ToString();
-                    Console.WriteLine("Osto onnistui!");
+                    engine.Success("Osto onnistui!");
                 }
                 catch (PostgresException pe)
                 {
                     engine.Error(pe.Message);
+                }
+                finally
+                {
+                    connection.Close();
                 }
             }
             else
@@ -59,7 +65,7 @@ namespace tjta3501
 
         public void Hae(string[] args)
         {
-            if (VaadiArgumentteja(1, args)) return;
+            if (RequireArgs(1, args)) return;
             printout = new StringBuilder();
 
             string sql = $"SELECT p.id, p.nimi, p.genre, k.nimi AS kehittäjä, j.nimi AS julkaisija, p.hinta, p.ikasuositus AS ikäsuositus, p.vuosi AS julkaisuvuosi FROM peli p, kehittaja k, julkaisija j WHERE k.id = p.id_kehittaja AND j.id = p.id_julkaisija AND p.nimi ILIKE '%{args[0]}%' ORDER BY levenshtein(p.nimi, '{args[0]}'), p.id";
@@ -76,7 +82,7 @@ namespace tjta3501
         public void Kokoelma(string[] args)
         {
             printout = new StringBuilder();
-            if (VaadiKirjautuminen()) return;
+            if (RequireLogin()) return;
 
             string sql = $"SELECT p.id, p.nimi, p.genre, k.nimi AS kehittäjä, j.nimi AS julkaisija, p.hinta, p.ikasuositus AS ikäsuositus, p.vuosi AS julkaisuvuosi FROM peli p, omistaa o, pelaaja pe, kehittaja k, julkaisija j WHERE k.id = p.id_kehittaja AND j.id = p.id_julkaisija AND p.id = o.id_peli AND o.id_pelaaja = pe.id AND pe.id = {pelaajaid}";
             NpgsqlConnection connection = Connect();
@@ -84,37 +90,8 @@ namespace tjta3501
             NpgsqlDataReader r = cmd.ExecuteReader();
             PrintPeli(r);
             connection.Close();
-
-            engine.Continue();
-        }
-
-
-        private bool VaadiKirjautuminen()
-        {
-            if (pelaajaid == 0)
-            {
-                engine.Error("Kirjaudu ensin sisään!");
+            if (args != null)
                 engine.Continue();
-            }
-            return pelaajaid == 0;
-        }
-
-
-        private bool VaadiArgumentteja(int lkm, string[] args)
-        {
-            if (args.Length != 1)
-            {
-                if (args.Length == 0)
-                {
-                    engine.Error($"Vaaditaan {lkm} argumentti(a)!");
-                }
-                else
-                {
-                    engine.Error("Argumentteja on liikaa!");
-                }
-                engine.Continue();
-            }
-            return args.Length != 1;
         }
 
 
@@ -122,8 +99,7 @@ namespace tjta3501
         {
             if (args.Length > 0)
             {
-                int tmp = 0;
-                if (!int.TryParse(args[0], out tmp))
+                if (!int.TryParse(args[0], out int tmp))
                 {
                     engine.Error("Anna pelaajaid numerona!");
                     engine.Continue();
@@ -139,7 +115,7 @@ namespace tjta3501
                 }
                 else
                 {
-                    Console.WriteLine($"Tervetuloa takaisin, {s}.");
+                    engine.Success($"Tervetuloa takaisin, {s}.");
                     pelaajaid = tmp;
                 }
                 connection.Close();
@@ -152,6 +128,152 @@ namespace tjta3501
             {
                 engine.Continue();
             }
+        }
+
+
+        public void Arvostele(string[] args)
+        {
+            if (RequireLogin()) return;
+            peliid:
+            Kokoelma(null);
+            int peliid = KysyNumero();
+            if (peliid == 0) goto peliid;
+            suosittelu:
+            string suosittelu = KysySuosittelua();
+            if (suosittelu == "") goto suosittelu;
+            string arvostelu = KysyArvostelu();
+
+            string sql = $"insert into arvostelu (id_pelaaja, id_peli, suosittelee, viesti) values ({pelaajaid}, {peliid}, {suosittelu}, '{arvostelu}');";
+            NpgsqlConnection connection = Connect();
+            try
+            {
+                new NpgsqlCommand(sql, connection).ExecuteScalar()?.ToString();
+                engine.Success("Arvostelu lähetetty!");
+            }
+            catch (PostgresException pe)
+            {
+                engine.Error(pe.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+            engine.Continue();
+        }
+
+
+        private string KysyArvostelu()
+        {
+            Console.Write("\nKirjoita arvostelusi: ");
+            return Console.ReadLine();
+        }
+
+
+        private string KysySuosittelua()
+        {
+            Console.Write("\nSuositteletko peliä? (y/n): ");
+            string[] input = Console.ReadLine().ToLower().Split(' ');
+            if (input != null)
+            {
+                if (input[0] == "y")
+                {
+                    return "true";
+                }
+                if (input[0] == "n")
+                {
+                    return "false";
+                }
+            }
+            return "";
+        }
+
+
+        private int KysyNumero()
+        {
+            Console.Write("\nAnna arvosteltavan pelin id: ");
+            string[] input = Console.ReadLine().ToLower().Split(' ');
+
+            if (input.Length > 0 && int.TryParse(input[0], out int peliid))
+            {
+                string sql = $"SELECT p.id FROM peli p, omistaa o WHERE p.id = o.id_peli AND o.id_pelaaja = {pelaajaid} AND p.id IN ({peliid})";
+                NpgsqlConnection connection = Connect();
+                try
+                {
+                    string s = new NpgsqlCommand(sql, connection).ExecuteScalar()?.ToString();
+                    if (s == null)
+                    {
+                        Console.Clear();
+                        engine.Error("Anna jonkun omistamasi pelin numero!");
+                        return 0;
+                    }
+                }
+                catch (PostgresException pe)
+                {
+                    engine.Error(pe.Message);
+                    engine.Continue();
+                }
+                finally
+                {
+                    connection.Close();
+                }
+            }
+            else
+            {
+                Console.Clear();
+                engine.Error("Anna jonkun omistamasi pelin numero!");
+                return 0;
+            }
+            return peliid;
+        }
+
+
+        public void Arvostelut(string[] args)
+        {
+            printout = new StringBuilder();
+            if (RequireLogin()) return;
+
+            string sql = $"SELECT suosittelee, viesti FROM arvostelu WHERE id_pelaaja = {pelaajaid}";
+            NpgsqlConnection connection = Connect();
+            NpgsqlCommand cmd = new NpgsqlCommand(sql, connection);
+            NpgsqlDataReader r = cmd.ExecuteReader();
+            while (r.Read())
+            {
+                string suosittelee = r.GetString(0);
+                string viesti = r.GetString(1);
+                printout.Append($"{suosittelee}\t{viesti}\n");
+            }
+            connection.Close();
+            Console.WriteLine(printout.ToString());
+            engine.Continue();
+        }
+
+
+        private bool RequireLogin()
+        {
+            if (pelaajaid == 0)
+            {
+                engine.Error("Kirjaudu ensin sisään!");
+                engine.Continue();
+            }
+            return pelaajaid == 0;
+        }
+
+
+        private bool RequireArgs(int lkm, string[] args)
+        {
+            if (args.Length != 1)
+            {
+                if (args.Length == 0)
+                {
+                    engine.Error($"Vaaditaan {lkm} argumentti(a)!");
+                }
+                else
+                {
+                    engine.Error("Argumentteja on liikaa!");
+                }
+                engine.Continue();
+            }
+            return args.Length != 1;
         }
 
 

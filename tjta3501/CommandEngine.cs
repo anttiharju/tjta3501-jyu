@@ -4,15 +4,9 @@ using System.Text;
 
 namespace tjta3501
 {
-    /// <summary>
-    /// Yksinkertainen komentorivisysteemi. Omassa tiedostossaan, jotta
-    /// Program.cs sisältäisi lähinnä tietokantakyselyihin liittyvää koodia.
-    /// </summary>
     public class CommandEngine
     {
-        public readonly Dictionary<string, Action<string[]>> commands;
-
-        private StringBuilder printout;
+        private readonly Dictionary<string, Action<string[]>> commands;
 
 
         public CommandEngine()
@@ -64,8 +58,20 @@ namespace tjta3501
 
         public void Continue()
         {
+            ConsoleColor tmp = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.WriteLine("\nPaina mitä tahansa näppäintä jatkaaksesi.");
             Console.ReadKey();
+            Console.ForegroundColor = tmp;
+        }
+
+
+        public void Success(string s)
+        {
+            ConsoleColor tmp = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(s);
+            Console.ForegroundColor = tmp;
         }
 
 
@@ -87,23 +93,26 @@ namespace tjta3501
         private void Home()
         {
             Logo();
-            printout = new StringBuilder("");
+            StringBuilder printout = new StringBuilder("");
             printout.Append("KOMENTO                KUVAUS\n\n");
             printout.Append("kirjaudu [pelaaja-id]  Kirjaudu sisään.\n");
             printout.Append("ulos                   Kirjaudu ulos.\n");
             printout.Append("kokoelma               Listaa omistamasi pelit (vaatii kirjautumisen).\n");
             printout.Append("hae [hakusana]         Hae pelejä.\n");
             printout.Append("osta [peli-id]         Lisää peli kokoelmaasi.\n");
+            printout.Append("arvostele              Siirry arvostelutilaan.\n");
+            printout.Append("arvostelut             Listaa kirjoittamasi arvostelut (raakile)\n");
             printout.Append("sulje                  Sulje sovellus.\n");
             Console.WriteLine(printout.ToString());
         }
 
 
+        /// Isoa tekstiä saa generoitua hakemalla "[sana] big text" duckduckgo'sta. Ei tue äö joten * lisätty käsin
         private void Logo()
         {
-            printout = new StringBuilder("");
             ConsoleColor tmp = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Blue;
+            StringBuilder printout = new StringBuilder("");
             printout.Append(" _   _                        \n");
             printout.Append("| | | | *_*  _   _ _ __ _   _ \n");
             printout.Append("| |_| |/ _ \\| | | | '__| | | |\n");
