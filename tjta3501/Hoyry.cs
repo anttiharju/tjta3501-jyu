@@ -21,41 +21,56 @@ namespace tjta3501
             engine.AddCommand("kirjaudu", Kirjaudu);
             engine.AddCommand("poistu", Poistu);
             engine.AddCommand("kokoelma", Kokoelma);
+            engine.AddCommand("hae", Hae);
             Calibrate();
+        }
+
+
+        public void Hae(string[] args)
+        {
+            if (args.Length < 1)
+            {
+                Error("Tarvitaan hakusana!");
+                Continue();
+                return;
+            }
+            if (args.Length > 1)
+            {
+                Error("Liikaa hakusanoja!");
+                Continue();
+                return;
+            }
+
+            printout = new StringBuilder();
+
+            string sql = $"SELECT p.id, p.nimi, p.genre, k.nimi AS kehittäjä, j.nimi AS julkaisija, p.hinta, p.ikasuositus AS ikäsuositus, p.vuosi AS julkaisuvuosi FROM peli p, kehittaja k, julkaisija j WHERE k.id = p.id_kehittaja AND j.id = p.id_julkaisija AND p.nimi ILIKE '%{args[0]}%' ORDER BY levenshtein(p.nimi, '{args[0]}'), p.id";
+            NpgsqlConnection connection = Connect();
+            NpgsqlCommand cmd = new NpgsqlCommand(sql, connection);
+            NpgsqlDataReader r = cmd.ExecuteReader();
+            PrintPeli(r);
+            connection.Close();
+
+            Continue();
         }
 
 
         public void Kokoelma(string[] args)
         {
+            printout = new StringBuilder();
             if (pelaajaid == 0)
             {
                 Error("Kirjaudu ensin sisään!");
                 Continue();
                 return;
             }
-            printout = new StringBuilder();
+
+            string sql = $"SELECT p.id, p.nimi, p.genre, k.nimi AS kehittäjä, j.nimi AS julkaisija, p.hinta, p.ikasuositus AS ikäsuositus, p.vuosi AS julkaisuvuosi FROM peli p, omistaa o, pelaaja pe, kehittaja k, julkaisija j WHERE k.id = p.id_kehittaja AND j.id = p.id_julkaisija AND p.id = o.id_peli AND o.id_pelaaja = pe.id AND pe.id = {pelaajaid}";
             NpgsqlConnection connection = Connect();
-
-            string sql = $"SELECT p.id, p.nimi, p.genre, k.nimi AS kehittäjä, j.nimi AS julkaisija, p.hinta, p.ikasuositus AS ikäsuositus, p.vuosi AS julkaisuvuosi FROM peli p, omistaa o, pelaaja pe, kehittaja k, julkaisija j WHERE k.id = p.id_kehittaja AND j.id = p.id_julkaisija AND p.id = o.id_peli AND o.id_pelaaja = pe.id AND pe.id = { pelaajaid}";
             NpgsqlCommand cmd = new NpgsqlCommand(sql, connection);
-
-            using NpgsqlDataReader r = cmd.ExecuteReader();
-
-            printout.Append($"id   {Pad("nimi", nimiLength)} {Pad("genre", genreLength)} {Pad("kehittäjä", kehittajaLength)} {Pad("julkaisija", julkaisijaLength)} hinta\tikasuos\tvuosi\n\n");
-            while (r.Read())
-            {
-                int id = r.GetInt32(0);
-                string nimi = r.GetString(1);
-                string genre = r.GetString(2);
-                string kehittaja = r.GetString(3);
-                string julkaisija = r.GetString(4);
-                string hinta = string.Format("{0:00.00}", r.GetDouble(5)).Replace('.', ',') + "e";
-                int ikasuositus = r.GetInt32(6);
-                int vuosi = r.GetInt32(7);
-                printout.Append($"{id,-4} {Pad(nimi, nimiLength)} {Pad(genre, genreLength)} {Pad(kehittaja, kehittajaLength)} {Pad(julkaisija, julkaisijaLength)} {hinta}\t{ikasuositus}\t{vuosi}\n");
-            }
-            Console.Write(printout.ToString());
+            NpgsqlDataReader r = cmd.ExecuteReader();
+            PrintPeli(r);
             connection.Close();
+
             Continue();
         }
 
@@ -88,6 +103,25 @@ namespace tjta3501
             {
                 Continue();
             }
+        }
+
+
+        public void PrintPeli(NpgsqlDataReader r)
+        {
+            printout.Append($"id   {Pad("nimi", nimiLength)} {Pad("genre", genreLength)} {Pad("kehittäjä", kehittajaLength)} {Pad("julkaisija", julkaisijaLength)} hinta\tikasuos\tvuosi\n\n");
+            while (r.Read())
+            {
+                int id = r.GetInt32(0);
+                string nimi = r.GetString(1);
+                string genre = r.GetString(2);
+                string kehittaja = r.GetString(3);
+                string julkaisija = r.GetString(4);
+                string hinta = string.Format("{0:00.00}", r.GetDouble(5)).Replace('.', ',') + "e";
+                int ikasuositus = r.GetInt32(6);
+                int vuosi = r.GetInt32(7);
+                printout.Append($"{id,-4} {Pad(nimi, nimiLength)} {Pad(genre, genreLength)} {Pad(kehittaja, kehittajaLength)} {Pad(julkaisija, julkaisijaLength)} {hinta}\t{ikasuositus}\t{vuosi}\n");
+            }
+            Console.Write(printout.ToString());
         }
 
 
