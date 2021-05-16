@@ -88,12 +88,13 @@ namespace tjta3501
         {
             Logo();
             printout = new StringBuilder("");
-            printout.Append("KOMENTO          KUVAUS\n\n");
-            printout.Append("kirjaudu [id]    Kirjaudu sisään.\n");
-            printout.Append("poistu           Kirjaudu ulos.\n");
-            printout.Append("kokoelma         Listaa omistamasi pelit (vaatii kirjautumisen).\n");
-            printout.Append("hae [hakusana]   Hae pelejä.\n");
-            printout.Append("sulje            Sulje sovellus.\n");
+            printout.Append("KOMENTO                KUVAUS\n\n");
+            printout.Append("kirjaudu [pelaaja-id]  Kirjaudu sisään.\n");
+            printout.Append("ulos                   Kirjaudu ulos.\n");
+            printout.Append("kokoelma               Listaa omistamasi pelit (vaatii kirjautumisen).\n");
+            printout.Append("hae [hakusana]         Hae pelejä.\n");
+            printout.Append("osta [peli-id]         Lisää peli kokoelmaasi.\n");
+            printout.Append("sulje                  Sulje sovellus.\n");
             Console.WriteLine(printout.ToString());
         }
 
