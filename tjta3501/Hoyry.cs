@@ -19,79 +19,17 @@ namespace tjta3501
 
         public Hoyry(CommandEngine engine)
         {
+            Console.Clear();
             this.engine = engine;
             engine.AddCommand("kirjaudu", Kirjaudu);    // tietokantaoperaatio
-            engine.AddCommand("ulos", KirjauduUlos);
             engine.AddCommand("kokoelma", Kokoelma);    // tietokantaoperaatio
             engine.AddCommand("hae", Hae);              // tietokantaoperaatio
             engine.AddCommand("osta", Osta);            // kirjoitusoperaatio
             engine.AddCommand("arvostele", Arvostele);  // kirjoitusoperaatio
+            engine.AddCommand("ulos", KirjauduUlos);
             engine.AddCommand("arvostelut", Arvostelut);// tietokantaoperaatio, raakile koska ylimääräinen
             Calibrate();
             engine.Run();
-        }
-
-
-        public void Osta(string[] args)
-        {
-            if (RequireLogin()) return;
-            if (RequireArgs(1, args)) return;
-
-            if (int.TryParse(args[0], out int peliid))
-            {
-                string sql = $"insert into omistaa (id_pelaaja, id_peli, minuutit) values ({pelaajaid}, {peliid}, 0)";
-                NpgsqlConnection connection = Connect();
-                try
-                {
-                    new NpgsqlCommand(sql, connection).ExecuteScalar()?.ToString();
-                    engine.Success("Osto onnistui!");
-                }
-                catch (PostgresException pe)
-                {
-                    engine.Error(pe.Message);
-                }
-                finally
-                {
-                    connection.Close();
-                }
-            }
-            else
-            {
-                engine.Error("Anna peli-id numerona!");
-            }
-            engine.Continue();
-        }
-
-
-        public void Hae(string[] args)
-        {
-            if (RequireArgs(1, args)) return;
-            printout = new StringBuilder();
-
-            string sql = $"SELECT p.id, p.nimi, p.genre, k.nimi AS kehittäjä, j.nimi AS julkaisija, p.hinta, p.ikasuositus AS ikäsuositus, p.vuosi AS julkaisuvuosi FROM peli p, kehittaja k, julkaisija j WHERE k.id = p.id_kehittaja AND j.id = p.id_julkaisija AND p.nimi ILIKE '%{args[0]}%' ORDER BY levenshtein(p.nimi, '{args[0]}'), p.id";
-            NpgsqlConnection connection = Connect();
-            NpgsqlCommand cmd = new NpgsqlCommand(sql, connection);
-            NpgsqlDataReader r = cmd.ExecuteReader();
-            PrintPeli(r);
-            connection.Close();
-
-            engine.Continue();
-        }
-
-
-        public void Kokoelma(string[] args)
-        {
-            printout = new StringBuilder();
-            if (RequireLogin()) return;
-
-            string sql = $"SELECT p.id, p.nimi, p.genre, k.nimi AS kehittäjä, j.nimi AS julkaisija, p.hinta, p.ikasuositus AS ikäsuositus, p.vuosi AS julkaisuvuosi FROM peli p, omistaa o, pelaaja pe, kehittaja k, julkaisija j WHERE k.id = p.id_kehittaja AND j.id = p.id_julkaisija AND p.id = o.id_peli AND o.id_pelaaja = pe.id AND pe.id = {pelaajaid}";
-            NpgsqlConnection connection = Connect();
-            NpgsqlCommand cmd = new NpgsqlCommand(sql, connection);
-            NpgsqlDataReader r = cmd.ExecuteReader();
-            PrintPeli(r);
-            connection.Close();
-            if (args != null)
-                engine.Continue();
         }
 
 
@@ -128,6 +66,69 @@ namespace tjta3501
             {
                 engine.Continue();
             }
+        }
+
+
+        public void Kokoelma(string[] args)
+        {
+            printout = new StringBuilder();
+            if (RequireLogin()) return;
+
+            string sql = $"SELECT p.id, p.nimi, p.genre, k.nimi AS kehittäjä, j.nimi AS julkaisija, p.hinta, p.ikasuositus AS ikäsuositus, p.vuosi AS julkaisuvuosi FROM peli p, omistaa o, pelaaja pe, kehittaja k, julkaisija j WHERE k.id = p.id_kehittaja AND j.id = p.id_julkaisija AND p.id = o.id_peli AND o.id_pelaaja = pe.id AND pe.id = {pelaajaid}";
+            NpgsqlConnection connection = Connect();
+            NpgsqlCommand cmd = new NpgsqlCommand(sql, connection);
+            NpgsqlDataReader r = cmd.ExecuteReader();
+            PrintPeli(r);
+            connection.Close();
+            if (args != null)
+                engine.Continue();
+        }
+
+
+        public void Hae(string[] args)
+        {
+            if (RequireArgs(1, args)) return;
+            printout = new StringBuilder();
+
+            string sql = $"SELECT p.id, p.nimi, p.genre, k.nimi AS kehittäjä, j.nimi AS julkaisija, p.hinta, p.ikasuositus AS ikäsuositus, p.vuosi AS julkaisuvuosi FROM peli p, kehittaja k, julkaisija j WHERE k.id = p.id_kehittaja AND j.id = p.id_julkaisija AND p.nimi ILIKE '%{args[0]}%' ORDER BY levenshtein(p.nimi, '{args[0]}'), p.id";
+            NpgsqlConnection connection = Connect();
+            NpgsqlCommand cmd = new NpgsqlCommand(sql, connection);
+            NpgsqlDataReader r = cmd.ExecuteReader();
+            PrintPeli(r);
+            connection.Close();
+
+            engine.Continue();
+        }
+
+
+        public void Osta(string[] args)
+        {
+            if (RequireLogin()) return;
+            if (RequireArgs(1, args)) return;
+
+            if (int.TryParse(args[0], out int peliid))
+            {
+                string sql = $"insert into omistaa (id_pelaaja, id_peli, minuutit) values ({pelaajaid}, {peliid}, 0)";
+                NpgsqlConnection connection = Connect();
+                try
+                {
+                    new NpgsqlCommand(sql, connection).ExecuteScalar()?.ToString();
+                    engine.Success("Osto onnistui!");
+                }
+                catch (PostgresException pe)
+                {
+                    engine.Error(pe.Message);
+                }
+                finally
+                {
+                    connection.Close();
+                }
+            }
+            else
+            {
+                engine.Error("Anna peli-id numerona!");
+            }
+            engine.Continue();
         }
 
 
