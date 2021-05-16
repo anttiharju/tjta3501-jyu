@@ -6,6 +6,7 @@ namespace tjta3501
 {
     public class Hoyry
     {
+        private readonly CommandEngine engine;
         private readonly string connectionString = "Host=192.168.1.23;Username=hoyry;Password=hl3;Database=tjta3501";
 
         private int pelaajaid;
@@ -18,26 +19,29 @@ namespace tjta3501
 
         public Hoyry(CommandEngine engine)
         {
+            this.engine = engine;
             engine.AddCommand("kirjaudu", Kirjaudu);
             engine.AddCommand("poistu", Poistu);
             engine.AddCommand("kokoelma", Kokoelma);
             engine.AddCommand("hae", Hae);
             Calibrate();
+            engine.Run();
         }
 
 
         public void Hae(string[] args)
         {
-            if (args.Length < 1)
+            if (args.Length != 1)
             {
-                Error("Tarvitaan hakusana!");
-                Continue();
-                return;
-            }
-            if (args.Length > 1)
-            {
-                Error("Liikaa hakusanoja!");
-                Continue();
+                if (args.Length == 0)
+                {
+                    engine.Error("Tarvitaan hakusana!");
+                }
+                else
+                {
+                    engine.Error("Liikaa hakusanoja!");
+                }
+                engine.Continue();
                 return;
             }
 
@@ -50,7 +54,7 @@ namespace tjta3501
             PrintPeli(r);
             connection.Close();
 
-            Continue();
+            engine.Continue();
         }
 
 
@@ -59,8 +63,8 @@ namespace tjta3501
             printout = new StringBuilder();
             if (pelaajaid == 0)
             {
-                Error("Kirjaudu ensin sisään!");
-                Continue();
+                engine.Error("Kirjaudu ensin sisään!");
+                engine.Continue();
                 return;
             }
 
@@ -71,7 +75,7 @@ namespace tjta3501
             PrintPeli(r);
             connection.Close();
 
-            Continue();
+            engine.Continue();
         }
 
 
@@ -86,7 +90,7 @@ namespace tjta3501
                 string s = new NpgsqlCommand(sql, connection).ExecuteScalar()?.ToString();
                 if (s == null)
                 {
-                    Error($"Id {tmp} ei vastaa yhtään pelaajaa tai pelaajalla on porttikielto.");
+                    engine.Error($"Id {tmp} ei vastaa yhtään pelaajaa tai pelaajalla on porttikielto.");
                 }
                 else
                 {
@@ -97,11 +101,11 @@ namespace tjta3501
             }
             else
             {
-                Error("\nKomento vaatii argumentiksi pelaajaid:n.\nVoit kirjautua nopeasti asetuksella -f.\n\nkirjaudu [id] -f");
+                engine.Error("Komento vaatii argumentiksi pelaajaid:n.\nVoit myös kirjautua nopeasti asetuksella -f.\n\nkirjaudu [id] -f");
             }
             if (args.Length < 2 || args[1] != "-f")
             {
-                Continue();
+                engine.Continue();
             }
         }
 
@@ -128,21 +132,6 @@ namespace tjta3501
         public void Poistu(string[] args)
         {
             pelaajaid = 0;
-        }
-
-
-        private void Error(string s)
-        {
-            ConsoleColor tmp = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(s);
-            Console.ForegroundColor = tmp;
-        }
-
-        private void Continue()
-        {
-            Console.WriteLine("\nPaina mitä tahansa näppäintä jatkaaksesi.");
-            Console.ReadKey();
         }
 
 
