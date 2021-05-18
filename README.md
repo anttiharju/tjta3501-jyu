@@ -1,9 +1,7 @@
 # Höyry
 Aja sovellus Visual Studio 2019 avulla. Tarkemmat käyttöohjeet sovelluksessa. Kehitetty windowsille.
 ## Videodemo
-Varuiksi jos ei saa ajettua paikallisesti.
-- https://m3.jyu.fi/jyumv/Members/anvemaha-40jyu.fi/184221
-- vanha: https://m3.jyu.fi/jyumv/Members/anvemaha-40jyu.fi/188487
+Siltä varalta ettet saa ajettua paikallisesti: https://m3.jyu.fi/jyumv/Members/anvemaha-40jyu.fi/338244
 ### Blogipostaus
 Käytin apuna seuraavaa blogipostausta: https://zetcode.com/csharp/postgresql/. Siinä tosin ei puhuta yhteyksien sulkemisesta, joten voi olla mahdollista että siinä on paljon muutakin pielessä. Sovellus on kuitenkin kohtuullisen toimiva vaikka saattaakin joissain skenaarioissa kaatua.
 
