@@ -21,13 +21,13 @@ namespace tjta3501
         {
             Console.Clear();
             this.engine = engine;
-            engine.AddCommand("kirjaudu", Kirjaudu);    // tietokantaoperaatio
-            engine.AddCommand("kokoelma", Kokoelma);    // tietokantaoperaatio
-            engine.AddCommand("hae", Hae);              // tietokantaoperaatio
-            engine.AddCommand("osta", Osta);            // kirjoitusoperaatio
-            engine.AddCommand("arvostele", Arvostele);  // kirjoitusoperaatio
+            engine.AddCommand("kirjaudu", Kirjaudu);     /// tietokantaoperaatio
+            engine.AddCommand("kokoelma", Kokoelma);     /// tietokantaoperaatio
+            engine.AddCommand("hae", Hae);               /// tietokantaoperaatio
+            engine.AddCommand("osta", Osta);             /// kirjoitusoperaatio
+            engine.AddCommand("arvostele", Arvostele);   /// kirjoitusoperaatio
             engine.AddCommand("ulos", KirjauduUlos);
-            engine.AddCommand("arvostelut", Arvostelut);// tietokantaoperaatio, raakile koska ylimääräinen
+            engine.AddCommand("arvostelut", Arvostelut); /// tietokantaoperaatio, raakile koska ylimääräinen
             Calibrate();
             engine.Run();
         }
@@ -44,7 +44,7 @@ namespace tjta3501
                     return;
                 }
 
-                string sql = $"SELECT nimimerkki FROM pelaaja WHERE id = {tmp} AND ban_pvm IS NULL";
+                string sql = $"SELECT nimimerkki FROM pelaaja WHERE id = {tmp} AND banned = 'false'";
                 NpgsqlConnection connection = Connect();
                 string s = new NpgsqlCommand(sql, connection).ExecuteScalar()?.ToString();
                 if (s == null)
